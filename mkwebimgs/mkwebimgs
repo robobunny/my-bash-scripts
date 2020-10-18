@@ -67,15 +67,15 @@ for FILE in *.JPG *.JPEG *.jpeg ; do
 done
 
 if [ "${make_new_folder}" ]; then
-    mkdir web
+    mkdir web 2>/dev/null
 fi
 
 if [ "${make_subs}" ]; then
     echo "Making directories ..."
-    "${make_mobile}" && mkdir "${make_new_folder:+web/}mobile"
-    "${make_tablet}" && mkdir "${make_new_folder:+web/}tablet"
-    "${make_desktop}" && mkdir "${make_new_folder:+web/}desktop"
-    "${make_hidpi}" && mkdir "${make_new_folder:+web/}hidpi"
+    "${make_mobile}" && mkdir "${make_new_folder:+web/}mobile" 2>/dev/null
+    "${make_tablet}" && mkdir "${make_new_folder:+web/}tablet" 2>/dev/null
+    "${make_desktop}" && mkdir "${make_new_folder:+web/}desktop" 2>/dev/null
+    "${make_hidpi}" && mkdir "${make_new_folder:+web/}hidpi" 2>/dev/null
 fi
 
 echo "Resizing images ..."
