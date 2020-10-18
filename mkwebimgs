@@ -1,0 +1,129 @@
+#!/bin/bash
+
+#   If you change this file be sure to
+#   `sudo cp ~/.scripts/mkwebimgs /usr/bin`
+#   so that you can call it from anywhere
+
+# You can adjust the widths here
+MOBILE_WIDTH=400
+TABLET_WIDTH=800
+DESKTOP_WIDTH=1200
+HIDPI_WIDTH=2000
+
+make_mobile=false
+make_tablet=false
+make_desktop=false
+make_hidpi=false
+unset make_subs
+unset make_new_folder
+
+help() {
+    echo "usage: mkwebimgs [-(flags)]"
+    echo "  Flags:"
+    echo "      -m  mobile"
+    echo "      -t  tablet"
+    echo "      -d  desktop"
+    echo "      -r  retina (HiDPI)"
+    echo "      -f  put the new images in a folder within working directory"
+    echo "      -s  make subdirectories for each size"
+    echo "-h or -?  show this help message"
+    exit
+}
+
+if [ "$#" == 0 ]; then
+    help
+fi
+
+#   TODO: accept a path argument
+
+while getopts 'mtdrsfh?' OPTION; do
+    case "$OPTION" in
+        m)
+            make_mobile=true
+        ;;
+        t)
+            make_tablet=true
+        ;;
+        d)
+            make_desktop=true
+        ;;
+        r)
+            make_hidpi=true
+        ;;
+        s)
+            make_subs=true
+        ;;
+        f)
+            make_new_folder=true
+        ;;
+        ? | h)
+            help
+        ;;
+    esac;
+done
+
+for FILE in *.JPG *.JPEG *.jpeg ; do
+    mv -- "$FILE" "${FILE%.*}.jpg" 2>/dev/null
+done
+
+if [ "${make_new_folder}" ]; then
+    mkdir web
+fi
+
+if [ "${make_subs}" ]; then
+    echo "Making directories ..."
+    "${make_mobile}" && mkdir "${make_new_folder:+web/}mobile"
+    "${make_tablet}" && mkdir "${make_new_folder:+web/}tablet"
+    "${make_desktop}" && mkdir "${make_new_folder:+web/}desktop"
+    "${make_hidpi}" && mkdir "${make_new_folder:+web/}hidpi"
+fi
+
+echo "Resizing images ..."
+
+declare -a FILES=()
+for FILE in *.jpg *.png ; do
+    FILES+=("$FILE")
+done
+
+if [ "$make_mobile" == "true" ]; then
+    echo "Making images for mobile ..."
+    for FILE in "${FILES[@]}" ; do
+        FILE_TYPE="${FILE##*.}"
+        NEW_FILE="${make_new_folder:+web/}${make_subs:+mobile/}${FILE%.*}-mobile.${FILE_TYPE}"
+        echo "  ... ${NEW_FILE}"
+        convert -resize "${MOBILE_WIDTH}"x"${MOBILE_WIDTH}"\> "${FILE}" "${NEW_FILE}"
+    done
+fi
+
+if [ "$make_tablet" == "true" ]; then
+    echo "Making images for tablet ..."
+    for FILE in "${FILES[@]}" ; do
+        FILE_TYPE="${FILE##*.}"
+        NEW_FILE="${make_new_folder:+web/}${make_subs:+tablet/}${FILE%.*}-tablet.${FILE_TYPE}"
+        echo "  ... ${NEW_FILE}"
+        convert -resize "${TABLET_WIDTH}"x"${TABLET_WIDTH}"\> "${FILE}" "${NEW_FILE}"
+    done
+fi
+
+if [ "$make_desktop" == "true" ]; then
+    echo "Making images for desktop ..."
+    for FILE in "${FILES[@]}" ; do
+        FILE_TYPE="${FILE##*.}"
+        NEW_FILE="${make_new_folder:+web/}${make_subs:+desktop/}${FILE%.*}-desktop.${FILE_TYPE}"
+        echo "  ... ${NEW_FILE}"
+        convert -resize "${DESKTOP_WIDTH}"x"${DESKTOP_WIDTH}"\> "${FILE}" "${NEW_FILE}"
+    done
+fi
+
+if [ "$make_hidpi" == "true" ]; then
+    echo "Making images for hidpi ..."
+    for FILE in "${FILES[@]}" ; do
+        FILE_TYPE="${FILE##*.}"
+        NEW_FILE="${make_new_folder:+web/}${make_subs:+hidpi/}${FILE%.*}-hidpi.${FILE_TYPE}"
+        echo "  ... ${NEW_FILE}"
+        convert -resize "${HIDPI_WIDTH}"x"${HIDPI_WIDTH}"\> "${FILE}" "${NEW_FILE}"
+    done
+fi
+
+echo "Done!"
+exit
